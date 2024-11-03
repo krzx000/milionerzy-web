@@ -1,48 +1,68 @@
-// WebSocketContext.tsx
-import { createContext, useContext, useEffect, useState } from "react";
-import useWebSocket, { ReadyState } from "react-use-websocket";
-import { QuestionType } from "./lib";
+import React, { createContext, useState, useEffect, useContext } from "react";
+import useWebSocket from "react-use-websocket";
 
-// Typy dla kontekstu
-interface WebSocketContextType {
-  questions: QuestionType[];
-  sendMessage: (message: string) => void;
-  readyState: ReadyState;
+interface Question {
+  id: number;
+  question: string;
+  answers: Record<"A" | "B" | "C" | "D", string>;
+  correctAnswer: "A" | "B" | "C" | "D";
 }
 
-const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
+interface WebSocketContextProps {
+  questions: Question[] | null;
+  currentQuestion: Question | null;
+  fetchQuestions: () => void;
+  fetchCurrentQuestion: () => void;
+}
 
-export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { sendMessage, lastMessage, readyState } = useWebSocket("ws://localhost:8080/", {
+const WebSocketContext = createContext<WebSocketContextProps | undefined>(undefined);
+
+export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
+  const [questions, setQuestions] = useState<Question[] | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+
+  const { sendJsonMessage, lastMessage } = useWebSocket("ws://localhost:8080/", {
     protocols: "echo-protocol",
-    shouldReconnect: () => true, // automatyczne ponowne łączenie
   });
-  const [questions, setQuestions] = useState<QuestionType[]>([]);
-
-  useEffect(() => {
-    sendMessage(JSON.stringify({ type: "getQuestions" }));
-  }, [sendMessage]);
 
   useEffect(() => {
     if (lastMessage) {
-      const data = JSON.parse(lastMessage.data);
-      if (data.type === "questions") {
-        setQuestions(data.data);
+      try {
+        const data = JSON.parse(lastMessage.data);
+
+        if (data.action === "allQuestions" && Array.isArray(data.data)) {
+          setQuestions(data.data);
+        }
+
+        if (data.action === "currentQuestion" && data.data?.question) {
+          setCurrentQuestion(data.data.question);
+          setCurrentQuestionIndex(data.data.index || 0);
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
       }
     }
   }, [lastMessage]);
 
+  const fetchQuestions = () => {
+    sendJsonMessage({ action: "getAllQuestions" });
+  };
+
+  const fetchCurrentQuestion = () => {
+    sendJsonMessage({ action: "getCurrentQuestion" });
+  };
+
   return (
-    <WebSocketContext.Provider value={{ questions, sendMessage, readyState }}>
+    <WebSocketContext.Provider value={{ questions, currentQuestion, fetchQuestions, fetchCurrentQuestion }}>
       {children}
     </WebSocketContext.Provider>
   );
 };
 
-// Hook dla wygody
 export const useWebSocketContext = () => {
   const context = useContext(WebSocketContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useWebSocketContext must be used within a WebSocketProvider");
   }
   return context;

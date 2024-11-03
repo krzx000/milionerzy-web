@@ -16,7 +16,7 @@ export const Question = () => {
   const { questions } = useWebSocketContext();
 
   // Call useWebSocket unconditionally
-  const { lastMessage, sendJsonMessage } = useWebSocket("ws://localhost:8080/", {
+  const { sendJsonMessage, lastMessage } = useWebSocket("ws://localhost:8080/", {
     protocols: "echo-protocol",
   });
 
@@ -24,13 +24,21 @@ export const Question = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    sendJsonMessage({ type: "getGameStarted" });
+  }, []);
+
+  useEffect(() => {
     if (lastMessage) {
       const data = JSON.parse(lastMessage.data);
       if (data.type === "selectAnswer") {
         setSelectedAnswer(data.data as AnswerKey);
       }
+
+      if (data.type === "gameStarted" && !data.data) {
+        navigate("/player/awaiting");
+      }
     }
-  }, [lastMessage]);
+  }, [lastMessage, navigate]);
 
   useEffect(() => {
     document.title = `Gracz - Pytanie - ${id}`;
@@ -53,18 +61,6 @@ export const Question = () => {
     return selectedAnswer === key ? ANSWER_BACKGROUND[key].SELECTED : ANSWER_BACKGROUND[key].NORMAL;
   };
 
-  const setQuestion = (n: number) => {
-    const newIndex = questionIndex + n;
-    if (newIndex < 0 || newIndex >= questions.length) {
-      return;
-    }
-    navigate(`/player/question/${newIndex}`); // Zmiana na nową stronę
-  };
-
-  const selectAnswer = () => {
-    setSelectedAnswer("C");
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -73,11 +69,11 @@ export const Question = () => {
       transition={{ duration: 0.5 }}
       className="w-full h-[100vh] flex flex-col"
     >
-      <div className="z-100 bg-red-500 absolute left-0 top-0">
+      {/* <div className="z-100 bg-red-500 absolute left-0 top-0">
         <button onClick={() => setQuestion(-1)}>POPRZEDNIE</button>
         <button onClick={selectAnswer}>SELECT</button>
         <button onClick={() => setQuestion(1)}>NASTĘPNE</button>
-      </div>
+      </div> */}
 
       <div className="mt-16 flex justify-between">
         <motion.div

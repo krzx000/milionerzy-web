@@ -6,26 +6,30 @@ import { Awaiting } from "./pages/gracz/stages/Awaiting";
 import { Question } from "./pages/gracz/stages/Question";
 import { WebSocketProvider } from "./lib/WebSocketContext";
 import { Prowadzacy } from "./pages/prowadzacy/Prowadzacy";
+import { Game } from "./pages/prowadzacy/Game";
 
 const router = createBrowserRouter([
   {
     path: "/player",
     element: <Gracz />,
-    children: [
-      {
-        path: "awaiting",
-        element: <Awaiting />,
-      },
-      {
-        path: "question/:id",
-        element: <Question />,
-        errorElement: <div>NIE MA PYTAŃ</div>,
-      },
-    ],
   },
+
+  {
+    path: "/player/awaiting",
+    element: <Awaiting />,
+  },
+  {
+    path: "/player/question/:id",
+    element: <Question />,
+  },
+
   {
     path: "/host",
     element: <Prowadzacy />,
+  },
+  {
+    path: "/host/game",
+    element: <Game />,
   },
 ]);
 
