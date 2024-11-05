@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWebSocketContext } from "../../contexts/WebSocketContext";
-import { get, post } from "../../utils/utils";
+import { get, getStatus, post } from "../../utils/utils";
 
 export const Prowadzacy: React.FC = () => {
   const navigate = useNavigate();
@@ -14,11 +14,13 @@ export const Prowadzacy: React.FC = () => {
 
   const startGame = () => {
     if (!allQuestionsLength || !gameQuestionsLength) {
+      getStatus();
       alert("Nie można rozpocząć gry, ponieważ nie ma pytań w puli.");
       return;
     }
 
     post("/start");
+    getStatus();
 
     navigate("/host/game");
   };

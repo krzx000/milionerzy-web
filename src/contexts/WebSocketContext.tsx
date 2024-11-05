@@ -14,6 +14,7 @@ interface WebSocketContextProps {
   currentQuestionIndex: number | null;
   lifelinesUsed: { "50:50": boolean; Audience: boolean; PhoneAFriend: boolean };
   selectedAnswer: "A" | "B" | "C" | "D" | null;
+  won: boolean;
 }
 
 const WebSocketContext = createContext<WebSocketContextProps | undefined>(undefined);
@@ -28,6 +29,7 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionType | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<"A" | "B" | "C" | "D" | null>(null);
+  const [won, setWon] = useState<boolean>(false);
   const [lifelinesUsed, setLifelinesUsed] = useState({
     "50:50": false,
     Audience: false,
@@ -53,23 +55,39 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
           setLost(data.lost);
           setLifelinesUsed(data.lifelinesUsed);
           setReward(data.reward);
+          setWon(data.won);
+          setCurrentQuestion(data.currentQuestion);
           setCurrentQuestionIndex(data.currentQuestionIndex);
           setAllQuestionsLength(data.allQuestionsLength);
           setGameQuestionsLength(data.gameQuestionsLength);
+          console.log("STATUS");
         }
 
         if (data.type === "NEXT_QUESTION") {
           setShowCorrectAnswer(false);
           setSelectedAnswer(null);
+          console.log("NEXT_QUESTION");
         }
 
         if (data.type === "START") {
           setGameStarted(true);
           setSelectedAnswer(null);
+          console.log("START");
         }
 
         if (data.type === "CORRECT_ANSWER") {
           setShowCorrectAnswer(true);
+          console.log("CORRECT_ANSWER");
+        }
+
+        if (data.type === "ANSWER_SELECTED") {
+          setSelectedAnswer(data.selectedAnswer);
+          console.log("ANSWER_SELECTED");
+        }
+
+        if (data.type === "WRONG_ANSWER") {
+          setLost(true);
+          console.log("WRONG_ANSWER");
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -82,6 +100,7 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
       value={{
         gameStarted,
         lifelinesUsed,
+        won,
         reward,
         lost,
         gameQuestionsLength,

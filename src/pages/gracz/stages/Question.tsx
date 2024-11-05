@@ -1,4 +1,4 @@
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import QuestionBackground from "../../../assets/question-background.png";
 import PrizeBackground from "../../../assets/prize-background.png";
@@ -7,12 +7,10 @@ import { HINT } from "../../../consts";
 import { useEffect } from "react";
 import { useWebSocketContext } from "../../../contexts/WebSocketContext";
 import { get } from "../../../utils/utils";
-
-// Typy odpowiedzi
-type AnswerKey = "A" | "B" | "C" | "D";
-
 import { useGlobalAudioPlayer } from "react-use-audio-player";
 import { SOUND } from "../../../lib/sound";
+
+type AnswerKey = "A" | "B" | "C" | "D";
 
 export const Question = () => {
   const { load, fade, stop } = useGlobalAudioPlayer();
@@ -24,6 +22,7 @@ export const Question = () => {
     currentQuestionIndex,
     gameQuestionsLength,
     selectedAnswer,
+    lost,
     showCorrectAnswer,
     reward,
   } = useWebSocketContext();
@@ -31,7 +30,7 @@ export const Question = () => {
   useEffect(() => {
     get("/status");
 
-    if (currentQuestionIndex) {
+    if (currentQuestionIndex != null) {
       load(SOUND.start[currentQuestionIndex - 1], { autoplay: true });
       fade(1, 0, 8000);
     }
@@ -39,13 +38,13 @@ export const Question = () => {
     return () => {
       stop();
     };
-  }, [currentQuestionIndex]);
+  }, [currentQuestionIndex, load, fade, stop]);
 
   useEffect(() => {
     if (currentQuestionIndex) {
       navigate(`/player/question/${currentQuestionIndex}`);
     }
-  }, [currentQuestionIndex]);
+  }, [currentQuestionIndex, navigate]);
 
   useEffect(() => {
     document.title = `Gracz - Pytanie - ${currentQuestionIndex}`;
@@ -53,31 +52,51 @@ export const Question = () => {
 
   useEffect(() => {
     if (!showCorrectAnswer || !currentQuestionIndex) return;
+
     if (selectedAnswer === currentQuestion?.correctAnswer) {
       load(SOUND.win[currentQuestionIndex - 1], { autoplay: true });
     } else {
       load(SOUND.lose[currentQuestionIndex - 1], { autoplay: true });
-      setTimeout(() => {
-        navigate("/player/lost");
-      }, 5000);
     }
+
     return () => {
       stop();
     };
-  }, [selectedAnswer, currentQuestion, showCorrectAnswer, currentQuestionIndex]);
+  }, [selectedAnswer, currentQuestion, showCorrectAnswer, currentQuestionIndex, load, navigate, stop]);
 
-  // Sprawdź, czy `questions` jest dostępne i czy zawiera dane dla danego `id`
-  if (!gameStarted || !currentQuestion || !currentQuestionIndex || !gameQuestionsLength) {
-    return <Navigate to={"/player/awaiting"} />;
-  }
+  useEffect(() => {
+    if (!gameStarted || !currentQuestion || !currentQuestionIndex || !gameQuestionsLength) {
+      navigate(`/player/awaiting`);
+    }
+  }, [gameStarted, currentQuestion, currentQuestionIndex, gameQuestionsLength]);
+
+  useEffect(() => {
+    if (lost) {
+      navigate("/player/lost");
+    }
+  }, [lost]);
+
+  useEffect(() => {
+    if (selectedAnswer) {
+      load(SOUND.answer, { autoplay: true });
+      fade(1, 0, 5000);
+    }
+  }, [selectedAnswer, load, fade]);
 
   // Funkcja pomocnicza do uzyskania odpowiedniego tła w zależności od odpowiedzi
   const getAnswerBackground = (key: AnswerKey) => {
-    if (showCorrectAnswer && currentQuestion.correctAnswer === key) {
+    if (showCorrectAnswer && currentQuestion?.correctAnswer === key) {
       return ANSWER_BACKGROUND[key].CORRECT;
     }
     return selectedAnswer === key ? ANSWER_BACKGROUND[key].SELECTED : ANSWER_BACKGROUND[key].NORMAL;
-    // return ANSWER_BACKGROUND[key].NORMAL
+  };
+
+  const getAnswerTextColor = (key: AnswerKey) => {
+    const background = getAnswerBackground(key);
+    if (background === ANSWER_BACKGROUND[key].CORRECT || background === ANSWER_BACKGROUND[key].SELECTED) {
+      return "text-black";
+    }
+    return "text-white";
   };
 
   useEffect(() => {
@@ -95,12 +114,6 @@ export const Question = () => {
       transition={{ duration: 0.5 }}
       className="w-full h-[100vh] flex flex-col"
     >
-      {/* <div className="z-100 bg-red-500 absolute left-0 top-0">
-        <button onClick={() => setQuestion(-1)}>POPRZEDNIE</button>
-        <button onClick={selectAnswer}>SELECT</button>
-        <button onClick={() => setQuestion(1)}>NASTĘPNE</button>
-      </div> */}
-
       <div className="mt-16 flex justify-between">
         <motion.div
           initial={{ opacity: 0 }}
@@ -140,7 +153,7 @@ export const Question = () => {
 
       <div className="absolute bottom-16 flex flex-col gap-16 w-full">
         <motion.div
-          key={currentQuestion.question}
+          key={currentQuestion?.question}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -148,7 +161,7 @@ export const Question = () => {
         >
           <div className="image-styling relative" style={{ backgroundImage: `url(${QuestionBackground})` }}>
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] text-center font-bold text-4xl text-white">
-              {currentQuestion.question}
+              {currentQuestion?.question}
             </div>
             <img src={QuestionBackground} className="invisible" alt="Question Background" />
           </div>
@@ -173,9 +186,9 @@ export const Question = () => {
                   <div
                     className={`absolute ${
                       key === "A" ? "left-[35%]" : "left-[20%]"
-                    } top-1/2 -translate-y-1/2 w-[60%] font-bold text-3xl text-white`}
+                    } top-1/2 -translate-y-1/2 w-[60%] font-bold text-3xl ${getAnswerTextColor(key)}`}
                   >
-                    {currentQuestion.answers[key]}
+                    {currentQuestion?.answers[key]}
                   </div>
                   <img
                     src={getAnswerBackground(key)}
@@ -205,9 +218,9 @@ export const Question = () => {
                   <div
                     className={`absolute ${
                       key === "C" ? "left-[35%]" : "left-[20%]"
-                    } top-1/2 -translate-y-1/2 w-[60%] font-bold text-3xl text-white`}
+                    } top-1/2 -translate-y-1/2 w-[60%] font-bold text-3xl ${getAnswerTextColor(key)}`}
                   >
-                    {currentQuestion.answers[key]}
+                    {currentQuestion?.answers[key]}
                   </div>
                   <img
                     src={getAnswerBackground(key)}

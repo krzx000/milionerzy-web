@@ -7,7 +7,7 @@ import { SOUND } from "../../../lib/sound";
 
 export const Awaiting: React.FC = () => {
   const navigate = useNavigate();
-  const { load, fade } = useGlobalAudioPlayer();
+  // const { load, fade } = useGlobalAudioPlayer();
   const { gameStarted, gameQuestionsLength } = useWebSocketContext();
 
   useEffect(() => {
@@ -16,8 +16,8 @@ export const Awaiting: React.FC = () => {
 
   useEffect(() => {
     if (gameStarted && gameQuestionsLength > 0) {
-      load(SOUND.lightsDown, { autoplay: true });
-      fade(1, 0, 5000);
+      // load(SOUND.lightsDown, { autoplay: true });
+      // fade(1, 0, 5000);
 
       setTimeout(() => {
         navigate("/player/question/1");
@@ -28,9 +28,16 @@ export const Awaiting: React.FC = () => {
   return (
     <div className="w-100[vw] h-[100vh] flex flex-col items-center justify-between py-48">
       {/* <button className="absolute left-0 top-0">AKTYWACJA</button> */}
-      <img src={Logo} className="w-1/5" />
+      <img
+        src={Logo}
+        className={`w-1/5 transition-transform duration-[2s] ${gameStarted ? "scale-150" : ""}`}
+      />
 
-      <div className="text-center text-4xl font-bold text-white animate-text-glowing">
+      <div
+        className={`text-center text-4xl font-bold text-white animate-text-glowing transition-opacity duration-250 ${
+          gameStarted ? "opacity-0" : ""
+        }`}
+      >
         Oczekiwanie na rozpoczęcie rozgrywki
       </div>
     </div>

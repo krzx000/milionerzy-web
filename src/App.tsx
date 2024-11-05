@@ -8,6 +8,7 @@ import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { Prowadzacy } from "./pages/prowadzacy/Prowadzacy";
 import { Game } from "./pages/prowadzacy/Game";
 import { Lost } from "./pages/gracz/stages/Lost";
+import { Debug } from "./pages/Debug";
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,11 @@ const router = createBrowserRouter([
         </Link>
       </div>
     ),
+  },
+
+  {
+    path: "/debug",
+    element: <Debug />,
   },
 
   {

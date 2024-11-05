@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import Logo from "../../../assets/logo.png";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import WinBackground from "../../../assets/win-background.png";
 import { useWebSocketContext } from "../../../contexts/WebSocketContext";
 import { motion } from "framer-motion";
-import { use } from "framer-motion/client";
 export const Lost: React.FC = () => {
   const navigate = useNavigate();
   const { reward, gameStarted } = useWebSocketContext();
@@ -14,10 +13,10 @@ export const Lost: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (gameStarted) {
+    if (!gameStarted) {
       setTimeout(() => {
         navigate("/player/awaiting");
-      }, 10 * 1000);
+      }, 5 * 1000);
     }
   }, [gameStarted]);
 
