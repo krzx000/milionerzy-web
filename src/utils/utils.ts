@@ -1,3 +1,5 @@
+import { g } from "framer-motion/client";
+
 export const post = async (endpoint: string, data?: any) => {
   try {
     const res = await fetch("http://localhost:3000" + endpoint, {
@@ -25,4 +27,8 @@ export const get = async (endpoint: string) => {
   } catch (err) {
     console.error("Failed to fetch:", err);
   }
+};
+
+export const getStatus = async () => {
+  get("/status");
 };

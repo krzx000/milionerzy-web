@@ -40,7 +40,6 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
 
   useEffect(() => {
     get("/status");
-    get("/current-question");
   }, []);
 
   useEffect(() => {
@@ -54,13 +53,12 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
           setLost(data.lost);
           setLifelinesUsed(data.lifelinesUsed);
           setReward(data.reward);
+          setCurrentQuestionIndex(data.currentQuestionIndex);
           setAllQuestionsLength(data.allQuestionsLength);
           setGameQuestionsLength(data.gameQuestionsLength);
         }
 
         if (data.type === "NEXT_QUESTION") {
-          setCurrentQuestionIndex(data.currentQuestionIndex);
-          setCurrentQuestion(data.currentQuestion);
           setShowCorrectAnswer(false);
           setSelectedAnswer(null);
         }
@@ -68,26 +66,10 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
         if (data.type === "START") {
           setGameStarted(true);
           setSelectedAnswer(null);
-          setLifelinesUsed(data.lifelinesUsed);
-          setLost(data.lost);
-          setCurrentQuestion(data.currentQuestion);
-          setAllQuestionsLength(data.allQuestionsLength);
-          setCurrentQuestionIndex(data.currentQuestionIndex);
-          setGameQuestionsLength(data.gameQuestionsLength);
-        }
-
-        if (data.type === "ANSWER_SELECTED") {
-          setSelectedAnswer(data.selectedAnswer);
         }
 
         if (data.type === "CORRECT_ANSWER") {
           setShowCorrectAnswer(true);
-        }
-
-        if (data.type === "CURRENT_QUESTION") {
-          setCurrentQuestion(data.currentQuestion);
-          setReward(data.reward);
-          setCurrentQuestionIndex(data.currentQuestionIndex);
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);

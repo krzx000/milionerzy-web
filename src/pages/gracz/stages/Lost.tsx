@@ -7,11 +7,19 @@ import { motion } from "framer-motion";
 import { use } from "framer-motion/client";
 export const Lost: React.FC = () => {
   const navigate = useNavigate();
-  const { reward, lost } = useWebSocketContext();
+  const { reward, gameStarted } = useWebSocketContext();
 
   useEffect(() => {
     document.title = "Gracz - Przegrana";
   }, []);
+
+  useEffect(() => {
+    if (gameStarted) {
+      setTimeout(() => {
+        navigate("/player/awaiting");
+      }, 10 * 1000);
+    }
+  }, [gameStarted]);
 
   return (
     <motion.div

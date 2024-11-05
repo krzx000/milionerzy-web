@@ -9,17 +9,16 @@ export const Prowadzacy: React.FC = () => {
 
   useEffect(() => {
     get("/status");
-    get("/current-question");
     document.title = "Prowadzący - Rozpoczęcie";
   }, []);
 
   const startGame = () => {
     if (!allQuestionsLength || !gameQuestionsLength) {
       alert("Nie można rozpocząć gry, ponieważ nie ma pytań w puli.");
+      return;
     }
 
     post("/start");
-    get("/current-question");
 
     navigate("/host/game");
   };

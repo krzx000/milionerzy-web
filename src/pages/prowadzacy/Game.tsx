@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useWebSocketContext } from "../../contexts/WebSocketContext";
 import { get, post } from "../../utils/utils";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 export const Game: React.FC = () => {
   const {
@@ -13,9 +13,10 @@ export const Game: React.FC = () => {
     gameQuestionsLength,
   } = useWebSocketContext();
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     get("/status");
-    get("/current-question");
   }, []);
   useEffect(() => {
     document.title = `Prowadzący - Pytanie - ${currentQuestionIndex}`;
@@ -26,9 +27,17 @@ export const Game: React.FC = () => {
     setLocalSelectedAnswer(null);
   }, [currentQuestionIndex]);
 
-  if (!gameStarted || !currentQuestion || !currentQuestionIndex || !gameQuestionsLength) {
-    return <Navigate to={"/host"} />;
-  }
+  // if (!gameStarted || !currentQuestion || !currentQuestionIndex || !gameQuestionsLength) {
+  //   console.log(!gameStarted, !currentQuestion, !currentQuestionIndex, !gameQuestionsLength);
+  //   return <Navigate to={"/host"} />;
+  // }
+
+  useEffect(() => {
+    console.log(!gameStarted, !currentQuestion);
+    if (!gameStarted || !currentQuestion) {
+      navigate("/host");
+    }
+  }, [gameStarted, currentQuestion, currentQuestionIndex, gameQuestionsLength]);
 
   const handleSelectAnswer = (answer: "A" | "B" | "C" | "D") => {
     // if (showCorrectAnswer) return; // Do not allow selecting answer when correct answer is shown

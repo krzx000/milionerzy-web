@@ -29,7 +29,7 @@ export const Question = () => {
   } = useWebSocketContext();
 
   useEffect(() => {
-    get("/current-question");
+    get("/status");
 
     if (currentQuestionIndex) {
       load(SOUND.start[currentQuestionIndex - 1], { autoplay: true });
