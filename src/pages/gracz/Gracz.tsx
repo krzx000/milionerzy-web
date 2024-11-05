@@ -1,24 +1,21 @@
 import { useEffect } from "react";
-import useWebSocket from "react-use-websocket";
 import { Awaiting } from "./stages/Awaiting";
 import { useNavigate } from "react-router-dom";
+import { useWebSocketContext } from "../../contexts/WebSocketContext";
+import { useGlobalAudioPlayer } from "react-use-audio-player";
+import { SOUND } from "../../lib/sound";
 
 export const Gracz: React.FC = () => {
-  const { sendJsonMessage, lastMessage } = useWebSocket("ws://localhost:8080/", {
-    protocols: "echo-protocol",
-  });
   const navigate = useNavigate();
-  useEffect(() => {
-    sendJsonMessage({ type: "getGameStarted" });
-  }, []);
+  const { gameStarted, gameQuestionsLength } = useWebSocketContext();
 
-  if (lastMessage) {
-    const data = JSON.parse(lastMessage.data);
-    if (data.type === "gameStarted" && data.data === true) {
-      navigate("/player/question/0");
+  useEffect(() => {
+    if (gameStarted && gameQuestionsLength > 0) {
+      navigate("/player/question/1");
+    } else {
+      navigate("/player/awaiting");
     }
-    navigate("/player/awaiting");
-  }
+  }, [gameStarted, gameQuestionsLength]);
 
   return <Awaiting />;
 };

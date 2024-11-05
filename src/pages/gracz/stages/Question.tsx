@@ -1,65 +1,91 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import QuestionBackground from "../../../assets/question-background.png";
 import PrizeBackground from "../../../assets/prize-background.png";
 import { ANSWER_BACKGROUND } from "../../../consts";
 import { HINT } from "../../../consts";
-import { useEffect, useState } from "react";
-import { useWebSocketContext } from "../../../lib/WebSocketContext";
-import useWebSocket from "react-use-websocket";
+import { useEffect } from "react";
+import { useWebSocketContext } from "../../../contexts/WebSocketContext";
+import { get } from "../../../utils/utils";
 
 // Typy odpowiedzi
 type AnswerKey = "A" | "B" | "C" | "D";
 
+import { useGlobalAudioPlayer } from "react-use-audio-player";
+import { SOUND } from "../../../lib/sound";
+
 export const Question = () => {
-  const { id } = useParams<{ id: string }>();
-  const { questions } = useWebSocketContext();
-
-  // Call useWebSocket unconditionally
-  const { sendJsonMessage, lastMessage } = useWebSocket("ws://localhost:8080/", {
-    protocols: "echo-protocol",
-  });
-
-  const [selectedAnswer, setSelectedAnswer] = useState<AnswerKey | null>(null);
+  const { load, fade, stop } = useGlobalAudioPlayer();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    sendJsonMessage({ type: "getGameStarted" });
-  }, []);
+  const {
+    gameStarted,
+    currentQuestion,
+    currentQuestionIndex,
+    gameQuestionsLength,
+    selectedAnswer,
+    showCorrectAnswer,
+    reward,
+  } = useWebSocketContext();
 
   useEffect(() => {
-    if (lastMessage) {
-      const data = JSON.parse(lastMessage.data);
-      if (data.type === "selectAnswer") {
-        setSelectedAnswer(data.data as AnswerKey);
-      }
+    get("/current-question");
 
-      if (data.type === "gameStarted" && !data.data) {
-        navigate("/player/awaiting");
-      }
+    if (currentQuestionIndex) {
+      load(SOUND.start[currentQuestionIndex - 1], { autoplay: true });
+      fade(1, 0, 8000);
     }
-  }, [lastMessage, navigate]);
+
+    return () => {
+      stop();
+    };
+  }, [currentQuestionIndex]);
 
   useEffect(() => {
-    document.title = `Gracz - Pytanie - ${id}`;
-  }, [id]);
+    if (currentQuestionIndex) {
+      navigate(`/player/question/${currentQuestionIndex}`);
+    }
+  }, [currentQuestionIndex]);
+
+  useEffect(() => {
+    document.title = `Gracz - Pytanie - ${currentQuestionIndex}`;
+  }, [currentQuestionIndex]);
+
+  useEffect(() => {
+    if (!showCorrectAnswer || !currentQuestionIndex) return;
+    if (selectedAnswer === currentQuestion?.correctAnswer) {
+      load(SOUND.win[currentQuestionIndex - 1], { autoplay: true });
+    } else {
+      load(SOUND.lose[currentQuestionIndex - 1], { autoplay: true });
+      setTimeout(() => {
+        navigate("/player/lost");
+      }, 5000);
+    }
+    return () => {
+      stop();
+    };
+  }, [selectedAnswer, currentQuestion, showCorrectAnswer, currentQuestionIndex]);
 
   // Sprawdź, czy `questions` jest dostępne i czy zawiera dane dla danego `id`
-  if (!questions || questions.length === 0) {
-    return <div>Ładowanie danych...</div>;
-  }
-
-  const questionIndex = parseInt(id ?? "0", 10);
-  const question = questions[questionIndex];
-
-  if (!question) {
-    return <div>Pytanie nie istnieje.</div>;
+  if (!gameStarted || !currentQuestion || !currentQuestionIndex || !gameQuestionsLength) {
+    return <Navigate to={"/player/awaiting"} />;
   }
 
   // Funkcja pomocnicza do uzyskania odpowiedniego tła w zależności od odpowiedzi
   const getAnswerBackground = (key: AnswerKey) => {
+    if (showCorrectAnswer && currentQuestion.correctAnswer === key) {
+      return ANSWER_BACKGROUND[key].CORRECT;
+    }
     return selectedAnswer === key ? ANSWER_BACKGROUND[key].SELECTED : ANSWER_BACKGROUND[key].NORMAL;
+    // return ANSWER_BACKGROUND[key].NORMAL
   };
+
+  useEffect(() => {
+    if (selectedAnswer) {
+      load(SOUND.answer, { autoplay: true });
+      fade(1, 0, 5000);
+    }
+  }, [selectedAnswer]);
 
   return (
     <motion.div
@@ -87,7 +113,7 @@ export const Question = () => {
             style={{ backgroundImage: `url(${PrizeBackground})` }}
           >
             <div className="absolute left-[35%] top-1/2 -translate-y-1/2 w-[53%] text-center font-bold text-4xl text-white">
-              1 000 000
+              {reward}
             </div>
             <img src={PrizeBackground} className="invisible" alt="Prize" />
           </div>
@@ -114,7 +140,7 @@ export const Question = () => {
 
       <div className="absolute bottom-16 flex flex-col gap-16 w-full">
         <motion.div
-          key={question.id}
+          key={currentQuestion.question}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -122,7 +148,7 @@ export const Question = () => {
         >
           <div className="image-styling relative" style={{ backgroundImage: `url(${QuestionBackground})` }}>
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] text-center font-bold text-4xl text-white">
-              {question.question}
+              {currentQuestion.question}
             </div>
             <img src={QuestionBackground} className="invisible" alt="Question Background" />
           </div>
@@ -134,7 +160,7 @@ export const Question = () => {
             {(["A", "B"] as AnswerKey[]).map((key) => (
               <motion.div
                 className="flex-1"
-                key={`${key}-${questionIndex}`} // Zmiana klucza
+                key={`${key}-${currentQuestionIndex}`} // Zmiana klucza
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -149,7 +175,7 @@ export const Question = () => {
                       key === "A" ? "left-[35%]" : "left-[20%]"
                     } top-1/2 -translate-y-1/2 w-[60%] font-bold text-3xl text-white`}
                   >
-                    {question.answers[key]}
+                    {currentQuestion.answers[key]}
                   </div>
                   <img
                     src={getAnswerBackground(key)}
@@ -166,7 +192,7 @@ export const Question = () => {
             {(["C", "D"] as AnswerKey[]).map((key) => (
               <motion.div
                 className="flex-1"
-                key={`${key}-${questionIndex}`} // Zmiana klucza
+                key={`${key}-${currentQuestionIndex}`} // Zmiana klucza
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -181,7 +207,7 @@ export const Question = () => {
                       key === "C" ? "left-[35%]" : "left-[20%]"
                     } top-1/2 -translate-y-1/2 w-[60%] font-bold text-3xl text-white`}
                   >
-                    {question.answers[key]}
+                    {currentQuestion.answers[key]}
                   </div>
                   <img
                     src={getAnswerBackground(key)}
