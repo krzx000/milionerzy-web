@@ -9,9 +9,11 @@ export const Debug = () => {
     gameStarted,
     lifelinesUsed,
     lost,
+    won,
     reward,
     selectedAnswer,
     showCorrectAnswer,
+    rewards,
   } = useWebSocketContext();
   return (
     <div className="text-white text-center text-xl">
@@ -21,11 +23,13 @@ export const Debug = () => {
       <p>currentQuestionIndex: {currentQuestionIndex ? currentQuestionIndex : 0}</p>
       <p>gameQuestionsLength: {gameQuestionsLength ? gameQuestionsLength : 0}</p>
       <p>gameStarted: {gameStarted.toString()}</p>
+      <p>won: {won.toString()}</p>
       <p>lifelinesUsed: {JSON.stringify(lifelinesUsed)}</p>
       <p>lost: {lost.toString()}</p>
       <p>reward: {reward ? reward : 0}</p>
       <p>selectedAnswer: {selectedAnswer ? selectedAnswer : "NIE MA"}</p>
       <p>showCorrectAnswer: {showCorrectAnswer.toString()}</p>
+      <p>rewards: {JSON.stringify(rewards)}</p>
     </div>
   );
 };

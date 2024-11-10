@@ -7,8 +7,9 @@ import { Question } from "./pages/gracz/stages/Question";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import { Prowadzacy } from "./pages/prowadzacy/Prowadzacy";
 import { Game } from "./pages/prowadzacy/Game";
-import { Lost } from "./pages/gracz/stages/Lost";
+import { EndGame } from "./pages/gracz/stages/EndGame";
 import { Debug } from "./pages/Debug";
+import { Ladder } from "./pages/gracz/stages/Ladder";
 
 const router = createBrowserRouter([
   {
@@ -53,8 +54,12 @@ const router = createBrowserRouter([
     element: <Game />,
   },
   {
-    path: "/player/lost",
-    element: <Lost />,
+    path: "/player/end-game",
+    element: <EndGame />,
+  },
+  {
+    path: "/player/ladder",
+    element: <Ladder />,
   },
 ]);
 

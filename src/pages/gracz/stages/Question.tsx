@@ -22,6 +22,7 @@ export const Question = () => {
     currentQuestionIndex,
     gameQuestionsLength,
     selectedAnswer,
+    won,
     lost,
     showCorrectAnswer,
     reward,
@@ -71,10 +72,10 @@ export const Question = () => {
   }, [gameStarted, currentQuestion, currentQuestionIndex, gameQuestionsLength]);
 
   useEffect(() => {
-    if (lost) {
-      navigate("/player/lost");
+    if (lost || won) {
+      navigate("/player/end-game");
     }
-  }, [lost]);
+  }, [lost, won]);
 
   useEffect(() => {
     if (selectedAnswer) {
@@ -125,7 +126,7 @@ export const Question = () => {
             className="image-styling relative w-1/3"
             style={{ backgroundImage: `url(${PrizeBackground})` }}
           >
-            <div className="absolute left-[35%] top-1/2 -translate-y-1/2 w-[53%] text-center font-bold text-4xl text-white">
+            <div className="absolute left-[35%] top-1/2 -translate-y-1/2 w-[53%] text-center font-bold text-5xl text-white">
               {reward}
             </div>
             <img src={PrizeBackground} className="invisible" alt="Prize" />
@@ -160,7 +161,7 @@ export const Question = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="image-styling relative" style={{ backgroundImage: `url(${QuestionBackground})` }}>
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] text-center font-bold text-4xl text-white">
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] text-center font-bold text-6xl text-white">
               {currentQuestion?.question}
             </div>
             <img src={QuestionBackground} className="invisible" alt="Question Background" />
@@ -186,7 +187,7 @@ export const Question = () => {
                   <div
                     className={`absolute ${
                       key === "A" ? "left-[35%]" : "left-[20%]"
-                    } top-1/2 -translate-y-1/2 w-[60%] font-bold text-3xl ${getAnswerTextColor(key)}`}
+                    } top-1/2 -translate-y-1/2 w-[60%] font-bold text-4xl ${getAnswerTextColor(key)}`}
                   >
                     {currentQuestion?.answers[key]}
                   </div>
@@ -218,7 +219,7 @@ export const Question = () => {
                   <div
                     className={`absolute ${
                       key === "C" ? "left-[35%]" : "left-[20%]"
-                    } top-1/2 -translate-y-1/2 w-[60%] font-bold text-3xl ${getAnswerTextColor(key)}`}
+                    } top-1/2 -translate-y-1/2 w-[60%] font-bold text-4xl ${getAnswerTextColor(key)}`}
                   >
                     {currentQuestion?.answers[key]}
                   </div>

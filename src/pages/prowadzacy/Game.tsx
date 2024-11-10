@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useWebSocketContext } from "../../contexts/WebSocketContext";
 import { get, post } from "../../utils/utils";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export const Game: React.FC = () => {
   const {
@@ -10,15 +10,19 @@ export const Game: React.FC = () => {
     showCorrectAnswer,
     currentQuestion,
     reward,
+    rewards,
     lost,
+    won,
     selectedAnswer,
   } = useWebSocketContext();
+
   const [localSelectedAnswer, setLocalSelectedAnswer] = useState<"A" | "B" | "C" | "D" | null>(
     selectedAnswer
   );
 
   useEffect(() => {
     get("/status");
+    setLocalSelectedAnswer(selectedAnswer);
   }, []);
 
   useEffect(() => {
@@ -62,11 +66,34 @@ export const Game: React.FC = () => {
     );
   }
 
+  const getButtonLabel = () => {
+    if (showCorrectAnswer && currentQuestion?.correctAnswer != localSelectedAnswer) return "Przegrana";
+    if (showCorrectAnswer) return "Przechodzenie do kolejnego pytania...";
+    if (selectedAnswer) return "Oczekiwanie na poprawną odpowiedź...";
+    if (localSelectedAnswer) return "Zatwierdź odpowiedź";
+    if (!localSelectedAnswer) return "Najpierw zaznacz odpowiedź";
+  };
+
+  const getButtonColors = () => {
+    if (showCorrectAnswer && currentQuestion?.correctAnswer != localSelectedAnswer)
+      return "bg-red-400 text-white";
+    if (showCorrectAnswer) return "bg-green-400 text-white";
+    if (selectedAnswer) return "bg-yellow-600 text-white";
+    if (localSelectedAnswer) return "bg-green-400 text-white";
+    if (!localSelectedAnswer) return "bg-gray-300 text-black";
+  };
+
+  const handleEndGame = () => {
+    post("/end-game");
+  };
+
   return (
     <div className="w-[100vw] h-[100vh] flex flex-col py-16 items-center justify-center">
       <div>
         <p className="text-white text-4xl font-bold text-center">Pytanie nr: {currentQuestionIndex}</p>
-        <p className="text-white text-3xl font-bold text-center">Pytanie za: {reward}</p>
+        <p className="text-white text-3xl font-bold text-center">
+          Pytanie za: {rewards[(currentQuestionIndex ?? 1) - 1]} zł
+        </p>
       </div>
 
       <div>
@@ -101,21 +128,26 @@ export const Game: React.FC = () => {
             D: {currentQuestion?.answers.D}
           </button>
         </div>
-        <button
-          onClick={handleConfirmAnswer}
-          className={`w-full px-8 py-4 mt-8 font-bold ${
-            localSelectedAnswer ? "bg-green-400" : "bg-gray-300"
-          }`}
-          disabled={!localSelectedAnswer || lost || showCorrectAnswer || !!selectedAnswer}
-        >
-          {localSelectedAnswer ? "Zatwierdź odpowiedź" : "Najpierw zaznacz odpowiedź"}
-        </button>
+
+        {!lost && !won && (
+          <button
+            onClick={handleConfirmAnswer}
+            className={`w-full px-8 py-4 mt-8 font-bold ${getButtonColors()}`}
+            disabled={!localSelectedAnswer || lost || showCorrectAnswer || !!selectedAnswer}
+          >
+            {getButtonLabel()}
+          </button>
+        )}
+
+        {/* {won} */}
 
         {lost && (
-          <div className="text-white text-center w-full">
+          <div className="text-white text-center w-full h-fit bg-red-400 mt-4 p-4">
             <h1 className="text-4xl font-bold">Przegrana</h1>
-            <Link to={"/host"} className="w-full px-8 py-2 mt-8 font-bold bg-red-400">
-              Powrót
+            <p className="text-2xl">Wygrana: {0} ZŁ</p>
+
+            <Link to={"/host"} onClick={handleEndGame}>
+              <button className="w-full px-8 py-2 mt-8 font-bold bg-red-600">Zakończ rozgrywkę</button>
             </Link>
           </div>
         )}

@@ -8,6 +8,7 @@ interface WebSocketContextProps {
   gameQuestionsLength: number;
   reward: number | null;
   lost: boolean;
+  rewards: number[];
   allQuestionsLength: number;
   showCorrectAnswer: boolean;
   currentQuestion: QuestionType | null;
@@ -27,6 +28,7 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
   const [reward, setReward] = useState<number | null>(null);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState<boolean>(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number | null>(null);
+  const [rewards, setRewards] = useState<number[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionType | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<"A" | "B" | "C" | "D" | null>(null);
   const [won, setWon] = useState<boolean>(false);
@@ -55,6 +57,7 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
           setLost(data.lost);
           setLifelinesUsed(data.lifelinesUsed);
           setReward(data.reward);
+          setRewards(data.rewards);
           setWon(data.won);
           setCurrentQuestion(data.currentQuestion);
           setCurrentQuestionIndex(data.currentQuestionIndex);
@@ -89,6 +92,25 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
           setLost(true);
           console.log("WRONG_ANSWER");
         }
+
+        if (data.type === "END_GAME") {
+          setGameStarted(false);
+          setSelectedAnswer(null);
+          setLost(false);
+          setReward(null);
+          setShowCorrectAnswer(false);
+          setCurrentQuestionIndex(null);
+          setRewards([]);
+          setCurrentQuestion(null);
+          setWon(false);
+          setLifelinesUsed({
+            "50:50": false,
+            Audience: false,
+            PhoneAFriend: false,
+          });
+
+          console.log("END_GAME");
+        }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
@@ -100,6 +122,7 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
       value={{
         gameStarted,
         lifelinesUsed,
+        rewards,
         won,
         reward,
         lost,
