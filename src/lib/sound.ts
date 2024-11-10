@@ -31,6 +31,13 @@ import lose12 from "../assets/sounds/lose/12 lose.mp3";
 
 import answer from "../assets/sounds/answer/answer.wav";
 import lightsDown from "../assets/sounds/lightsdown/start lights down.wav";
+
+export const DURATION = {
+  win: [3, 3, 3, 9, 9, 9, 9, 9, 7, 8, 9, 23],
+  start: [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],
+  lose: [5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6],
+};
+
 export const SOUND = {
   lightsDown,
   answer,

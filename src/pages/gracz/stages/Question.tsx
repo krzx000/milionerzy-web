@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { useWebSocketContext } from "../../../contexts/WebSocketContext";
 import { get } from "../../../utils/utils";
 import { useGlobalAudioPlayer } from "react-use-audio-player";
-import { SOUND } from "../../../lib/sound";
+import { DURATION, SOUND } from "../../../lib/sound";
 
 type AnswerKey = "A" | "B" | "C" | "D";
 
@@ -26,6 +26,7 @@ export const Question = () => {
     lost,
     showCorrectAnswer,
     reward,
+    showLadder,
   } = useWebSocketContext();
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export const Question = () => {
 
     if (currentQuestionIndex != null) {
       load(SOUND.start[currentQuestionIndex - 1], { autoplay: true });
-      fade(1, 0, 8000);
+      fade(1, 0, DURATION.start[currentQuestionIndex - 1] * 1000 * 0.95);
     }
 
     return () => {
@@ -56,8 +57,10 @@ export const Question = () => {
 
     if (selectedAnswer === currentQuestion?.correctAnswer) {
       load(SOUND.win[currentQuestionIndex - 1], { autoplay: true });
+      fade(1, 0, DURATION.win[currentQuestionIndex - 1] * 1000 * 0.95);
     } else {
       load(SOUND.lose[currentQuestionIndex - 1], { autoplay: true });
+      fade(1, 0, DURATION.lose[currentQuestionIndex - 1] * 1000 * 0.95);
     }
 
     return () => {
@@ -72,17 +75,14 @@ export const Question = () => {
   }, [gameStarted, currentQuestion, currentQuestionIndex, gameQuestionsLength]);
 
   useEffect(() => {
+    if (showLadder) navigate("/player/ladder");
+  }, [showLadder]);
+
+  useEffect(() => {
     if (lost || won) {
       navigate("/player/end-game");
     }
   }, [lost, won]);
-
-  useEffect(() => {
-    if (selectedAnswer) {
-      load(SOUND.answer, { autoplay: true });
-      fade(1, 0, 5000);
-    }
-  }, [selectedAnswer, load, fade]);
 
   // Funkcja pomocnicza do uzyskania odpowiedniego tła w zależności od odpowiedzi
   const getAnswerBackground = (key: AnswerKey) => {
@@ -103,7 +103,7 @@ export const Question = () => {
   useEffect(() => {
     if (selectedAnswer) {
       load(SOUND.answer, { autoplay: true });
-      fade(1, 0, 5000);
+      fade(1, 0, 5000 * 0.95);
     }
   }, [selectedAnswer]);
 

@@ -8,6 +8,7 @@ interface WebSocketContextProps {
   gameQuestionsLength: number;
   reward: number | null;
   lost: boolean;
+  showLadder: boolean;
   rewards: number[];
   allQuestionsLength: number;
   showCorrectAnswer: boolean;
@@ -27,6 +28,7 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
   const [lost, setLost] = useState<boolean>(false);
   const [reward, setReward] = useState<number | null>(null);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState<boolean>(false);
+  const [showLadder, setShowLadder] = useState<boolean>(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number | null>(null);
   const [rewards, setRewards] = useState<number[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<QuestionType | null>(null);
@@ -93,6 +95,16 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
           console.log("WRONG_ANSWER");
         }
 
+        if (data.type === "SHOW_LADDER") {
+          setShowLadder(true);
+          console.log("SHOW_LADDER");
+        }
+
+        if (data.type === "HIDE_LADDER") {
+          setShowLadder(false);
+          console.log("HIDE_LADDER");
+        }
+
         if (data.type === "END_GAME") {
           setGameStarted(false);
           setSelectedAnswer(null);
@@ -121,6 +133,8 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
     <WebSocketContext.Provider
       value={{
         gameStarted,
+        showLadder,
+
         lifelinesUsed,
         rewards,
         won,

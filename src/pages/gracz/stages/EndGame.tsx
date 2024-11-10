@@ -14,11 +14,7 @@ export const EndGame: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!gameStarted) {
-      setTimeout(() => {
-        navigate("/player/awaiting");
-      }, 5 * 1000);
-    }
+    if (!gameStarted) navigate("/player/awaiting");
   }, [gameStarted]);
 
   return (

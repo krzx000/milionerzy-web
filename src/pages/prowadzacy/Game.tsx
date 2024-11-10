@@ -14,6 +14,7 @@ export const Game: React.FC = () => {
     lost,
     won,
     selectedAnswer,
+    showLadder,
   } = useWebSocketContext();
 
   const [localSelectedAnswer, setLocalSelectedAnswer] = useState<"A" | "B" | "C" | "D" | null>(
@@ -59,8 +60,8 @@ export const Game: React.FC = () => {
     return (
       <div className="text-center text-white">
         <h1>Wróć na stronę główną:</h1>
-        <Link to={"/host"} className="bg-blue-500">
-          Powrót
+        <Link to={"/host"}>
+          <button className="bg-blue-500 p-4 px-8"> Powrót</button>
         </Link>
       </div>
     );
@@ -97,37 +98,49 @@ export const Game: React.FC = () => {
       </div>
 
       <div>
-        <p className="py-4 font-bold text-3xl text-white">{currentQuestion?.question}</p>
-        <div className="flex flex-col gap-2">
-          <button
-            className={`${getButtonClass("A")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
-            onClick={() => handleSelectAnswer("A")}
-            disabled={lost || showCorrectAnswer || !!selectedAnswer}
-          >
-            A: {currentQuestion?.answers.A}
-          </button>
-          <button
-            className={`${getButtonClass("B")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
-            onClick={() => handleSelectAnswer("B")}
-            disabled={lost || showCorrectAnswer || !!selectedAnswer}
-          >
-            B: {currentQuestion?.answers.B}
-          </button>
-          <button
-            className={`${getButtonClass("C")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
-            onClick={() => handleSelectAnswer("C")}
-            disabled={lost || showCorrectAnswer || !!selectedAnswer}
-          >
-            C: {currentQuestion?.answers.C}
-          </button>
-          <button
-            className={`${getButtonClass("D")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
-            onClick={() => handleSelectAnswer("D")}
-            disabled={lost || showCorrectAnswer || !!selectedAnswer}
-          >
-            D: {currentQuestion?.answers.D}
-          </button>
-        </div>
+        {showLadder && (
+          <div className="font-bold text-3xl text-white">
+            AKTUALNIE POKAZYWANA JEST DRABINKA. <br />
+            PROSZĘ CZEKAĆ
+          </div>
+        )}
+
+        {!showLadder && (
+          <>
+            <p className="py-4 font-bold text-3xl text-white">{currentQuestion?.question}</p>
+
+            <div className="flex flex-col gap-2">
+              <button
+                className={`${getButtonClass("A")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
+                onClick={() => handleSelectAnswer("A")}
+                disabled={lost || showCorrectAnswer || !!selectedAnswer}
+              >
+                A: {currentQuestion?.answers.A}
+              </button>
+              <button
+                className={`${getButtonClass("B")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
+                onClick={() => handleSelectAnswer("B")}
+                disabled={lost || showCorrectAnswer || !!selectedAnswer}
+              >
+                B: {currentQuestion?.answers.B}
+              </button>
+              <button
+                className={`${getButtonClass("C")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
+                onClick={() => handleSelectAnswer("C")}
+                disabled={lost || showCorrectAnswer || !!selectedAnswer}
+              >
+                C: {currentQuestion?.answers.C}
+              </button>
+              <button
+                className={`${getButtonClass("D")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
+                onClick={() => handleSelectAnswer("D")}
+                disabled={lost || showCorrectAnswer || !!selectedAnswer}
+              >
+                D: {currentQuestion?.answers.D}
+              </button>
+            </div>
+          </>
+        )}
 
         {!lost && !won && (
           <button
@@ -139,7 +152,16 @@ export const Game: React.FC = () => {
           </button>
         )}
 
-        {/* {won} */}
+        {won && (
+          <div className="text-white text-center w-full h-fit bg-green-400 mt-4 p-4">
+            <h1 className="text-4xl font-bold">Wygrana</h1>
+            <p className="text-2xl">Wygrana: {reward} ZŁ</p>
+
+            <Link to={"/host"} onClick={handleEndGame}>
+              <button className="w-full px-8 py-2 mt-8 font-bold bg-green-600">Zakończ rozgrywkę</button>
+            </Link>
+          </div>
+        )}
 
         {lost && (
           <div className="text-white text-center w-full h-fit bg-red-400 mt-4 p-4">

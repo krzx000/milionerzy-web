@@ -1,34 +1,20 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import QuestionBackground from "../../../assets/question-background.png";
-import PrizeBackground from "../../../assets/prize-background.png";
-import { ANSWER_BACKGROUND } from "../../../consts";
-import { HINT } from "../../../consts";
 import { useEffect } from "react";
 import { useWebSocketContext } from "../../../contexts/WebSocketContext";
 import { get } from "../../../utils/utils";
-
-type AnswerKey = "A" | "B" | "C" | "D";
+import { HINT } from "../../../consts";
 
 export const Ladder = () => {
+  const { currentQuestionIndex, gameQuestionsLength, rewards, showLadder } = useWebSocketContext();
   const navigate = useNavigate();
-
-  const {
-    gameStarted,
-    currentQuestion,
-    currentQuestionIndex,
-    gameQuestionsLength,
-    selectedAnswer,
-    won,
-    rewards,
-    lost,
-    showCorrectAnswer,
-    reward,
-  } = useWebSocketContext();
-
   useEffect(() => {
     get("/status");
   }, []);
+
+  useEffect(() => {
+    if (!showLadder) navigate(`/player/question/${currentQuestionIndex}`);
+  }, [showLadder]);
 
   useEffect(() => {
     document.title = `Gracz - Drabinka wyników - ${currentQuestionIndex}`;
@@ -50,15 +36,11 @@ export const Ladder = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="flex">
-            <div className="flex justify-center">
-              <img src={HINT.F_F} className="w-3/5" alt="Hint F F" />
-            </div>
-            <div className="flex justify-center">
-              <img src={HINT.VOTING} className="w-3/5" alt="Hint Voting" />
-            </div>
-            <div className="flex justify-center">
-              <img src={HINT.PHONE} className="w-3/5" alt="Hint Phone" />
-            </div>
+            {Object.values(HINT).map((hint, index) => (
+              <div key={index} className="flex justify-center">
+                <img src={hint} className="w-3/5" alt={`Hint ${index}`} />
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>
@@ -66,12 +48,11 @@ export const Ladder = () => {
       <div className="flex justify-center">
         <table>
           <tbody>
-            {Array.from({ length: gameQuestionsLength }, (_, i) => i + 1)
-              .reverse()
-              .map((questionNumber) => (
-                <tr className={`text-4xl font-black `} key={questionNumber}>
+            {Array.from({ length: gameQuestionsLength }, (_, i) => gameQuestionsLength - i).map(
+              (questionNumber) => (
+                <tr className="text-4xl font-black" key={questionNumber}>
                   <td
-                    className={`text-right pl-4 text-[#DD9E00] py-[0.0625rem]  ${
+                    className={`text-right pl-4 text-[#DD9E00] py-[0.0625rem] ${
                       questionNumber === currentQuestionIndex
                         ? "bg-[#FFC400] rounded-l-xl text-[#011D56]"
                         : ""
@@ -97,10 +78,11 @@ export const Ladder = () => {
                         : ""
                     }`}
                   >
-                    {rewards[(questionNumber ?? 0) - 1]}
+                    {rewards[questionNumber - 1]}
                   </td>
                 </tr>
-              ))}
+              )
+            )}
           </tbody>
         </table>
       </div>
