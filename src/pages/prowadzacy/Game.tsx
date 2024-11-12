@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useWebSocketContext } from "../../contexts/WebSocketContext";
 import { get, post } from "../../utils/utils";
 import { Link } from "react-router-dom";
+import { useWebSocketContext } from "../../hooks/useWebSocketContext";
 
 export const Game: React.FC = () => {
   const {
@@ -21,41 +21,41 @@ export const Game: React.FC = () => {
     selectedAnswer
   );
 
+  // Pobranie statusu i aktualizacja stanu zaznaczonej odpowiedzi
   useEffect(() => {
     get("/status");
     setLocalSelectedAnswer(selectedAnswer);
-  }, []);
+  }, [selectedAnswer]);
 
+  // Zaktualizowanie tytułu strony po zmianie pytania
   useEffect(() => {
     document.title = `Prowadzący - Pytanie - ${currentQuestionIndex}`;
   }, [currentQuestionIndex]);
 
+  // Resetowanie zaznaczonej odpowiedzi po zmianie pytania
   useEffect(() => {
     get("/status");
     setLocalSelectedAnswer(null);
   }, [currentQuestionIndex]);
 
   const handleSelectAnswer = (answer: "A" | "B" | "C" | "D") => {
-    if (!currentQuestion) return;
-    if (lost) return;
-    if (showCorrectAnswer) return;
+    if (!currentQuestion || lost || showCorrectAnswer) return;
     setLocalSelectedAnswer(answer);
   };
 
   const handleConfirmAnswer = () => {
-    if (!localSelectedAnswer) return;
-    if (lost) return;
-    if (showCorrectAnswer) return; // Do not allow confirming answer when correct answer
+    if (!localSelectedAnswer || lost || showCorrectAnswer) return;
     post(`/select-answer/${localSelectedAnswer}`);
   };
 
   const getButtonClass = (answer: "A" | "B" | "C" | "D") => {
     if (showCorrectAnswer && currentQuestion?.correctAnswer === answer) {
-      return "bg-green-500"; // Green background for correct answer when `showCorrectAnswer` is true
+      return "bg-green-500"; // Zielony przycisk dla poprawnej odpowiedzi
     }
-    return localSelectedAnswer === answer ? "bg-yellow-500" : "bg-blue-600"; // Yellow if selected, blue otherwise
+    return localSelectedAnswer === answer ? "bg-yellow-500" : "bg-blue-600"; // Żółty, jeśli wybrano, niebieski w przeciwnym razie
   };
 
+  // Zwracanie ekranu startowego, jeśli brak pytania lub gra nie została rozpoczęta
   if (!currentQuestion || !gameStarted) {
     return (
       <div className="text-center text-white">
@@ -67,21 +67,23 @@ export const Game: React.FC = () => {
     );
   }
 
+  // Zwracanie etykiety przycisku zależnie od stanu gry
   const getButtonLabel = () => {
-    if (showCorrectAnswer && currentQuestion?.correctAnswer != localSelectedAnswer) return "Przegrana";
+    if (showCorrectAnswer && currentQuestion?.correctAnswer !== localSelectedAnswer) return "Przegrana";
     if (showCorrectAnswer) return "Przechodzenie do kolejnego pytania...";
     if (selectedAnswer) return "Oczekiwanie na poprawną odpowiedź...";
     if (localSelectedAnswer) return "Zatwierdź odpowiedź";
-    if (!localSelectedAnswer) return "Najpierw zaznacz odpowiedź";
+    return "Najpierw zaznacz odpowiedź";
   };
 
+  // Zwracanie kolorów przycisku zależnie od stanu gry
   const getButtonColors = () => {
-    if (showCorrectAnswer && currentQuestion?.correctAnswer != localSelectedAnswer)
+    if (showCorrectAnswer && currentQuestion?.correctAnswer !== localSelectedAnswer)
       return "bg-red-400 text-white";
     if (showCorrectAnswer) return "bg-green-400 text-white";
     if (selectedAnswer) return "bg-yellow-600 text-white";
     if (localSelectedAnswer) return "bg-green-400 text-white";
-    if (!localSelectedAnswer) return "bg-gray-300 text-black";
+    return "bg-gray-300 text-black";
   };
 
   const handleEndGame = () => {
@@ -142,7 +144,7 @@ export const Game: React.FC = () => {
           </>
         )}
 
-        {!lost && !won && (
+        {!showLadder && !lost && !won && (
           <button
             onClick={handleConfirmAnswer}
             className={`w-full px-8 py-4 mt-8 font-bold ${getButtonColors()}`}

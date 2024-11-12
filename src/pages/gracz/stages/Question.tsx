@@ -5,16 +5,19 @@ import PrizeBackground from "../../../assets/prize-background.png";
 import { ANSWER_BACKGROUND } from "../../../consts";
 import { HINT } from "../../../consts";
 import { useEffect } from "react";
-import { useWebSocketContext } from "../../../contexts/WebSocketContext";
 import { get } from "../../../utils/utils";
 import { useGlobalAudioPlayer } from "react-use-audio-player";
 import { DURATION, SOUND } from "../../../lib/sound";
+import useFitText from "use-fit-text";
+import { useWebSocketContext } from "../../../hooks/useWebSocketContext";
 
 type AnswerKey = "A" | "B" | "C" | "D";
 
 export const Question = () => {
   const { load, fade, stop } = useGlobalAudioPlayer();
   const navigate = useNavigate();
+  const { fontSize: fontSizeQuestion, ref: refQuestion } = useFitText({ maxFontSize: 500, minFontSize: 100 });
+  const { fontSize: fontSizeAnswer, ref: refAnswer } = useFitText({ maxFontSize: 300, minFontSize: 50 });
 
   const {
     gameStarted,
@@ -37,15 +40,11 @@ export const Question = () => {
       fade(1, 0, DURATION.start[currentQuestionIndex - 1] * 1000 * 0.95);
     }
 
-    return () => {
-      stop();
-    };
+    return () => stop();
   }, [currentQuestionIndex, load, fade, stop]);
 
   useEffect(() => {
-    if (currentQuestionIndex) {
-      navigate(`/player/question/${currentQuestionIndex}`);
-    }
+    if (currentQuestionIndex) navigate(`/player/question/${currentQuestionIndex}`);
   }, [currentQuestionIndex, navigate]);
 
   useEffect(() => {
@@ -55,49 +54,45 @@ export const Question = () => {
   useEffect(() => {
     if (!showCorrectAnswer || !currentQuestionIndex) return;
 
-    if (selectedAnswer === currentQuestion?.correctAnswer) {
-      load(SOUND.win[currentQuestionIndex - 1], { autoplay: true });
-      fade(1, 0, DURATION.win[currentQuestionIndex - 1] * 1000 * 0.95);
-    } else {
-      load(SOUND.lose[currentQuestionIndex - 1], { autoplay: true });
-      fade(1, 0, DURATION.lose[currentQuestionIndex - 1] * 1000 * 0.95);
-    }
+    const sound = selectedAnswer === currentQuestion?.correctAnswer ? SOUND.win : SOUND.lose;
+    load(sound[currentQuestionIndex - 1], { autoplay: true });
+    fade(
+      1,
+      0,
+      DURATION[selectedAnswer === currentQuestion?.correctAnswer ? "win" : "lose"][currentQuestionIndex - 1] *
+        1000 *
+        0.95
+    );
 
-    return () => {
-      stop();
-    };
-  }, [selectedAnswer, currentQuestion, showCorrectAnswer, currentQuestionIndex, load, navigate, stop]);
+    return () => stop();
+  }, [selectedAnswer, currentQuestion, showCorrectAnswer, currentQuestionIndex, load, fade, stop]);
 
   useEffect(() => {
     if (!gameStarted || !currentQuestion || !currentQuestionIndex || !gameQuestionsLength) {
       navigate(`/player/awaiting`);
     }
-  }, [gameStarted, currentQuestion, currentQuestionIndex, gameQuestionsLength]);
+  }, [gameStarted, currentQuestion, currentQuestionIndex, gameQuestionsLength, navigate]);
 
   useEffect(() => {
     if (showLadder) navigate("/player/ladder");
-  }, [showLadder]);
+  }, [showLadder, navigate]);
 
   useEffect(() => {
-    if (lost || won) {
-      navigate("/player/end-game");
-    }
-  }, [lost, won]);
+    if (lost || won) navigate("/player/end-game");
+  }, [lost, won, navigate]);
 
-  // Funkcja pomocnicza do uzyskania odpowiedniego tła w zależności od odpowiedzi
-  const getAnswerBackground = (key: AnswerKey) => {
+  const getAnswerBackground = (key: "A" | "B" | "C" | "D") => {
     if (showCorrectAnswer && currentQuestion?.correctAnswer === key) {
       return ANSWER_BACKGROUND[key].CORRECT;
     }
     return selectedAnswer === key ? ANSWER_BACKGROUND[key].SELECTED : ANSWER_BACKGROUND[key].NORMAL;
   };
 
-  const getAnswerTextColor = (key: AnswerKey) => {
+  const getAnswerTextColor = (key: "A" | "B" | "C" | "D") => {
     const background = getAnswerBackground(key);
-    if (background === ANSWER_BACKGROUND[key].CORRECT || background === ANSWER_BACKGROUND[key].SELECTED) {
-      return "text-black";
-    }
-    return "text-white";
+    return background === ANSWER_BACKGROUND[key].CORRECT || background === ANSWER_BACKGROUND[key].SELECTED
+      ? "text-black"
+      : "text-white";
   };
 
   useEffect(() => {
@@ -105,7 +100,7 @@ export const Question = () => {
       load(SOUND.answer, { autoplay: true });
       fade(1, 0, 5000 * 0.95);
     }
-  }, [selectedAnswer]);
+  }, [selectedAnswer, load, fade]);
 
   return (
     <motion.div
@@ -126,7 +121,11 @@ export const Question = () => {
             className="image-styling relative w-1/3"
             style={{ backgroundImage: `url(${PrizeBackground})` }}
           >
-            <div className="absolute left-[35%] top-1/2 -translate-y-1/2 w-[53%] text-center font-bold text-5xl text-white">
+            <div
+              ref={refAnswer}
+              style={{ fontSize: fontSizeAnswer }}
+              className="absolute left-[35%] top-1/2 -translate-y-1/2 w-[53%] h-[75%] text-center font-bold text-white "
+            >
               {reward}
             </div>
             <img src={PrizeBackground} className="invisible" alt="Prize" />
@@ -161,7 +160,11 @@ export const Question = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="image-styling relative" style={{ backgroundImage: `url(${QuestionBackground})` }}>
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] text-center font-bold text-6xl text-white">
+            <div
+              ref={refQuestion}
+              style={{ fontSize: fontSizeQuestion }}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] h-[75%] text-center font-bold text-6xl text-white  flex justify-center items-center"
+            >
               {currentQuestion?.question}
             </div>
             <img src={QuestionBackground} className="invisible" alt="Question Background" />
@@ -185,9 +188,13 @@ export const Question = () => {
                   style={{ backgroundImage: `url(${getAnswerBackground(key)})` }}
                 >
                   <div
+                    ref={refAnswer}
+                    style={{ fontSize: fontSizeAnswer }}
                     className={`absolute ${
                       key === "A" ? "left-[35%]" : "left-[20%]"
-                    } top-1/2 -translate-y-1/2 w-[60%] font-bold text-4xl ${getAnswerTextColor(key)}`}
+                    } top-1/2 -translate-y-1/2 w-[57.5%] font-bold flex justify-start items-center   h-[75%]  ${getAnswerTextColor(
+                      key
+                    )}`}
                   >
                     {currentQuestion?.answers[key]}
                   </div>
@@ -217,9 +224,13 @@ export const Question = () => {
                   style={{ backgroundImage: `url(${getAnswerBackground(key)})` }}
                 >
                   <div
+                    ref={refAnswer}
+                    style={{ fontSize: fontSizeAnswer }}
                     className={`absolute ${
                       key === "C" ? "left-[35%]" : "left-[20%]"
-                    } top-1/2 -translate-y-1/2 w-[60%] font-bold text-4xl ${getAnswerTextColor(key)}`}
+                    } top-1/2 -translate-y-1/2 w-[57.5%] font-bold h-[75%]  flex justify-start items-center  ${getAnswerTextColor(
+                      key
+                    )}`}
                   >
                     {currentQuestion?.answers[key]}
                   </div>

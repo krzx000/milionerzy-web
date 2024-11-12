@@ -1,4 +1,4 @@
-export const post = async (endpoint: string, data?: any) => {
+export const post = async (endpoint: string, data?: Record<string, unknown>) => {
   try {
     const res = await fetch("http://localhost:3000" + endpoint, {
       method: "POST",

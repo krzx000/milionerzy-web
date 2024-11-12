@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import useWebSocket from "react-use-websocket";
 import { get } from "../utils/utils";
 import { QuestionType } from "../lib/lib.ts";
@@ -19,9 +19,9 @@ interface WebSocketContextProps {
   won: boolean;
 }
 
-const WebSocketContext = createContext<WebSocketContextProps | undefined>(undefined);
+export const WebSocketContext = createContext<WebSocketContextProps | undefined>(undefined);
 
-export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
+export const WebSocketProvider: React.FC<React.PropsWithChildren<unknown>> = ({ children }) => {
   const [gameStarted, setGameStarted] = useState<boolean>(false);
   const [gameQuestionsLength, setGameQuestionsLength] = useState<number>(0);
   const [allQuestionsLength, setAllQuestionsLength] = useState<number>(0);
@@ -151,12 +151,4 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<{}>> = ({ child
       {children}
     </WebSocketContext.Provider>
   );
-};
-
-export const useWebSocketContext = () => {
-  const context = useContext(WebSocketContext);
-  if (!context) {
-    throw new Error("useWebSocketContext must be used within a WebSocketProvider");
-  }
-  return context;
 };

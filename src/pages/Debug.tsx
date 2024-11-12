@@ -1,4 +1,4 @@
-import { useWebSocketContext } from "../contexts/WebSocketContext";
+import { useWebSocketContext } from "../hooks/useWebSocketContext";
 
 export const Debug = () => {
   const {
@@ -14,6 +14,7 @@ export const Debug = () => {
     selectedAnswer,
     showCorrectAnswer,
     rewards,
+    showLadder,
   } = useWebSocketContext();
   return (
     <div className="text-white text-center text-xl">
@@ -29,6 +30,7 @@ export const Debug = () => {
       <p>reward: {reward ? reward : 0}</p>
       <p>selectedAnswer: {selectedAnswer ? selectedAnswer : "NIE MA"}</p>
       <p>showCorrectAnswer: {showCorrectAnswer.toString()}</p>
+      <p>showLadder: {showLadder.toString()}</p>
       <p>rewards: {JSON.stringify(rewards)}</p>
     </div>
   );
