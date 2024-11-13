@@ -8,12 +8,13 @@
 }
 
 body {
-  background-image: url("./assets/main-background.png");
+  background-image: url("./assets/milionerzytlo.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
   font-family: "Poppins", sans-serif;
+  backdrop-filter: blur(4px);
   user-select: none;
   overflow: hidden;
 }
@@ -34,3 +35,4 @@ body {
   background-repeat: no-repeat;
   transition: background-image 0.5s;
 }
+

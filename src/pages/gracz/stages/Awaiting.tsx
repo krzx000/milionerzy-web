@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import Logo from "../../../assets/logo.png";
+import Logo from "../../../assets/logomilionerzy.png";
 import { useNavigate } from "react-router-dom";
 import { useWebSocketContext } from "../../../hooks/useWebSocketContext";
+import { motion } from "framer-motion";
 
 // Komponent Awaiting odpowiedzialny za ekran oczekiwania na rozpoczęcie gry.
 export const Awaiting: React.FC = () => {
@@ -33,18 +34,21 @@ export const Awaiting: React.FC = () => {
   }, [gameStarted, gameQuestionsLength, navigate]);
 
   return (
-    <div className="w-[100vw] h-[100vh] flex flex-col items-center justify-between py-48">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className={`w-[100vw] h-[100vh] flex flex-col items-center justify-center py-4 transition-all duration-[2s] ${
+        gameStarted ? "bg-black/80 backdrop-blur-[4px]" : "bg-black/90 backdrop-blur-[8px]"
+      }`}
+    >
       {/* Logo z animacją powiększania, jeśli gra została rozpoczęta */}
       <img
         src={Logo}
         alt="Logo"
-        className={`w-1/5 transition-transform duration-[2s] ${gameStarted ? "scale-150" : ""}`}
+        className={`w-1/3 transition-transform duration-[2s] ${gameStarted ? "scale-150" : ""}`}
       />
-
-      {/* Tekst informujący o stanie gry z animacją */}
-      <div className="text-center text-4xl font-bold text-white animate-text-glowing transition-opacity duration-250">
-        {gameStarted ? "Przechodzenie do gry..." : "Oczekiwanie na rozpoczęcie rozgrywki"}
-      </div>
-    </div>
+    </motion.div>
   );
 };
