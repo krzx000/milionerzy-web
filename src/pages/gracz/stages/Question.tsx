@@ -10,7 +10,7 @@ import { useGlobalAudioPlayer } from "react-use-audio-player";
 import { DURATION, SOUND } from "../../../lib/sound";
 import useFitText from "use-fit-text";
 import { useWebSocketContext } from "../../../hooks/useWebSocketContext";
-
+import CrossMark from "../../../assets/hints/cross_mark.png";
 type AnswerKey = "A" | "B" | "C" | "D";
 
 export const Question = () => {
@@ -25,10 +25,13 @@ export const Question = () => {
     currentQuestionIndex,
     gameQuestionsLength,
     selectedAnswer,
+    activeLifeline,
     won,
     lost,
     showCorrectAnswer,
     reward,
+    lifelineResult,
+    lifelinesUsed,
     showLadder,
   } = useWebSocketContext();
 
@@ -138,13 +141,34 @@ export const Question = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="flex gap-4">
-            <div>
+            <div className="relative">
+              <img
+                src={CrossMark}
+                className={`absolute w-3/4 transition-opacity duration-200 ${
+                  lifelinesUsed.F_F ? "opacity-100" : "opacity-0"
+                }`}
+                alt="Hint 50:50"
+              />
               <img src={HINT.F_F} className="w-3/4" alt="Hint F F" />
             </div>
-            <div>
+            <div className="relative">
+              <img
+                src={CrossMark}
+                className={`absolute w-3/4 transition-opacity duration-200 ${
+                  lifelinesUsed.VOTING ? "opacity-100" : "opacity-0"
+                }`}
+                alt="Hint VOTING"
+              />
               <img src={HINT.VOTING} className="w-3/4" alt="Hint Voting" />
             </div>
-            <div>
+            <div className="relative">
+              <img
+                src={CrossMark}
+                className={`absolute w-3/4 transition-opacity duration-200 ${
+                  lifelinesUsed.PHONE ? "opacity-100" : "opacity-0"
+                }`}
+                alt="Hint PHONE"
+              />
               <img src={HINT.PHONE} className="w-3/4" alt="Hint Phone" />
             </div>
           </div>
@@ -171,12 +195,15 @@ export const Question = () => {
           </div>
         </motion.div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 relative">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-28 ">
+            {activeLifeline && <img src={HINT[activeLifeline]} alt="" id="HINTANIMATION" />}
+          </div>
           {/* Grupa A i B */}
           <div className="flex">
             {(["A", "B"] as AnswerKey[]).map((key) => (
               <motion.div
-                className="flex-1"
+                className={`flex-1`}
                 key={`${key}-${currentQuestionIndex}`} // Zmiana klucza
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -184,7 +211,9 @@ export const Question = () => {
                 transition={{ duration: 1.5, delay: 0.5 * (key === "A" ? 1 : 2) }}
               >
                 <div
-                  className="image-styling relative"
+                  className={`image-styling relative ${
+                    lifelineResult.includes(key) ? `${key}` : "opacity-0"
+                  }`}
                   style={{ backgroundImage: `url(${getAnswerBackground(key)})` }}
                 >
                   <div
@@ -220,7 +249,9 @@ export const Question = () => {
                 transition={{ duration: 1.5, delay: 0.5 * (key === "C" ? 3 : 4) }}
               >
                 <div
-                  className="image-styling relative"
+                  className={`image-styling relative ${
+                    lifelineResult.includes(key) ? `${key}` : "opacity-0"
+                  }`}
                   style={{ backgroundImage: `url(${getAnswerBackground(key)})` }}
                 >
                   <div

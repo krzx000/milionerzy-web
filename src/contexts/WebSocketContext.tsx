@@ -14,9 +14,11 @@ interface WebSocketContextProps {
   showCorrectAnswer: boolean;
   currentQuestion: QuestionType | null;
   currentQuestionIndex: number | null;
-  lifelinesUsed: { "50:50": boolean; Audience: boolean; PhoneAFriend: boolean };
+  lifelinesUsed: { F_F: boolean; VOTING: boolean; PHONE: boolean };
   selectedAnswer: "A" | "B" | "C" | "D" | null;
   won: boolean;
+  lifelineResult: string[];
+  activeLifeline: "F_F" | "VOTING" | "PHONE" | null;
 }
 
 export const WebSocketContext = createContext<WebSocketContextProps | undefined>(undefined);
@@ -34,10 +36,13 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<unknown>> = ({ 
   const [currentQuestion, setCurrentQuestion] = useState<QuestionType | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<"A" | "B" | "C" | "D" | null>(null);
   const [won, setWon] = useState<boolean>(false);
+  const [lifelineResult, setLifelineResult] = useState<string[]>(["A", "B", "C", "D"]);
+  const [activeLifeline, setActiveLifeline] = useState<"F_F" | "VOTING" | "PHONE" | null>(null);
+
   const [lifelinesUsed, setLifelinesUsed] = useState({
-    "50:50": false,
-    Audience: false,
-    PhoneAFriend: false,
+    F_F: false,
+    VOTING: false,
+    PHONE: false,
   });
 
   const { lastMessage } = useWebSocket("ws://localhost:3000/", {
@@ -53,10 +58,16 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<unknown>> = ({ 
       try {
         const data = JSON.parse(lastMessage.data);
 
+        if (data.type === "LIFELINE_USED") {
+          setActiveLifeline(data.lifeline);
+          console.log("LIFELINE_USED");
+        }
+
         if (data.type === "STATUS") {
           setGameStarted(data.gameStarted);
           setSelectedAnswer(data.selectedAnswer);
           setLost(data.lost);
+          setLifelineResult(data.lifelineResult);
           setLifelinesUsed(data.lifelinesUsed);
           setReward(data.reward);
           setRewards(data.rewards);
@@ -69,7 +80,9 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<unknown>> = ({ 
         }
 
         if (data.type === "NEXT_QUESTION") {
+          setLifelineResult(["A", "B", "C", "D"]);
           setShowCorrectAnswer(false);
+          setActiveLifeline(null);
           setSelectedAnswer(null);
           console.log("NEXT_QUESTION");
         }
@@ -109,16 +122,18 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<unknown>> = ({ 
           setGameStarted(false);
           setSelectedAnswer(null);
           setLost(false);
+          setLifelineResult(["A", "B", "C", "D"]);
           setReward(null);
           setShowCorrectAnswer(false);
           setCurrentQuestionIndex(null);
           setRewards([]);
           setCurrentQuestion(null);
+          setActiveLifeline(null);
           setWon(false);
           setLifelinesUsed({
-            "50:50": false,
-            Audience: false,
-            PhoneAFriend: false,
+            F_F: false,
+            VOTING: false,
+            PHONE: false,
           });
 
           console.log("END_GAME");
@@ -134,8 +149,10 @@ export const WebSocketProvider: React.FC<React.PropsWithChildren<unknown>> = ({ 
       value={{
         gameStarted,
         showLadder,
-
+        lifelineResult,
         lifelinesUsed,
+
+        activeLifeline,
         rewards,
         won,
         reward,

@@ -16,6 +16,8 @@ export const Game: React.FC = () => {
     won,
     selectedAnswer,
     showLadder,
+    lifelineResult,
+    lifelinesUsed,
   } = useWebSocketContext();
   const [localLifelineSelected, setLocalLifelineSelected] = useState<"F_F" | "VOTING" | "PHONE" | null>(null);
   const [localSelectedAnswer, setLocalSelectedAnswer] = useState<"A" | "B" | "C" | "D" | null>(
@@ -37,10 +39,12 @@ export const Game: React.FC = () => {
   useEffect(() => {
     get("/status");
     setLocalSelectedAnswer(null);
+    setLocalLifelineSelected(null);
   }, [currentQuestionIndex]);
 
   const handleSelectAnswer = (answer: "A" | "B" | "C" | "D") => {
     if (!currentQuestion || lost || showCorrectAnswer) return;
+    if (!lifelineResult.includes(answer)) return;
     setLocalSelectedAnswer(answer);
   };
 
@@ -92,8 +96,15 @@ export const Game: React.FC = () => {
   };
 
   const handleSelectLifeline = (lifeline?: "F_F" | "VOTING" | "PHONE") => {
-    // if (lost || showCorrectAnswer || !!selectedAnswer) return;
+    if (lost || showCorrectAnswer || selectedAnswer) return;
+    if (lifelinesUsed[lifeline!]) return;
     setLocalLifelineSelected(lifeline ?? null);
+  };
+
+  const handleLifeLineConfirm = () => {
+    if (!localLifelineSelected || lost || showCorrectAnswer) return;
+    post(`/use-lifeline/${localLifelineSelected}`);
+    setLocalLifelineSelected(null);
   };
 
   return (
@@ -102,28 +113,37 @@ export const Game: React.FC = () => {
         <p className="text-white text-4xl font-bold text-center">Koła ratunkowe</p>
         <div className="flex gap-4 justify-between">
           <button
-            className={`${localLifelineSelected === "F_F" ? "bg-blue-500" : ""}`}
+            className={`${localLifelineSelected === "F_F" ? "bg-blue-500" : ""}  ${
+              lifelinesUsed["F_F"] ? "bg-red-600" : ""
+            } `}
             onClick={() => handleSelectLifeline("F_F")}
           >
             <img src={HINT.F_F} className="w-[8vw]" alt="Hint F F" />
           </button>
 
           <button
-            className={`${localLifelineSelected === "VOTING" ? "bg-blue-500" : ""}`}
+            className={`${localLifelineSelected === "VOTING" ? "bg-blue-500" : ""} ${
+              lifelinesUsed["VOTING"] ? "bg-red-600" : ""
+            }`}
             onClick={() => handleSelectLifeline("VOTING")}
           >
             <img src={HINT.VOTING} className="w-[8vw]" alt="Hint Voting" />
           </button>
 
           <button
-            className={`${localLifelineSelected === "PHONE" ? "bg-blue-500" : ""}`}
+            className={`${localLifelineSelected === "PHONE" ? "bg-blue-500" : ""} ${
+              lifelinesUsed["PHONE"] ? "bg-red-600" : ""
+            }`}
             onClick={() => handleSelectLifeline("PHONE")}
           >
             <img src={HINT.PHONE} className="w-[8vw]" alt="Hint Phone" />
           </button>
         </div>
-        <div>
-          <button className="bg-green-500 w-full p-4 font-bold mt-8">Zatwierdź koło</button>
+
+        <div className={lifelinesUsed.F_F && lifelinesUsed.PHONE && lifelinesUsed.VOTING ? "invisible" : ""}>
+          <button className="bg-green-500 w-full p-4 font-bold mt-8" onClick={handleLifeLineConfirm}>
+            Zatwierdź koło
+          </button>
 
           <button
             onClick={() => handleSelectLifeline()}
@@ -156,28 +176,36 @@ export const Game: React.FC = () => {
 
               <div className="flex flex-col gap-2">
                 <button
-                  className={`${getButtonClass("A")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
+                  className={`${getButtonClass("A")}  ${
+                    lifelineResult.includes("A") ? "" : "opacity-20"
+                  } px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
                   onClick={() => handleSelectAnswer("A")}
                   disabled={lost || showCorrectAnswer || !!selectedAnswer}
                 >
                   A: {currentQuestion?.answers.A}
                 </button>
                 <button
-                  className={`${getButtonClass("B")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
+                  className={`${getButtonClass("B")} ${
+                    lifelineResult.includes("B") ? "" : "opacity-20"
+                  } px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
                   onClick={() => handleSelectAnswer("B")}
                   disabled={lost || showCorrectAnswer || !!selectedAnswer}
                 >
                   B: {currentQuestion?.answers.B}
                 </button>
                 <button
-                  className={`${getButtonClass("C")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
+                  className={`${getButtonClass("C")} ${
+                    lifelineResult.includes("C") ? "" : "opacity-20"
+                  } px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
                   onClick={() => handleSelectAnswer("C")}
                   disabled={lost || showCorrectAnswer || !!selectedAnswer}
                 >
                   C: {currentQuestion?.answers.C}
                 </button>
                 <button
-                  className={`${getButtonClass("D")} px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
+                  className={`${getButtonClass("D")} ${
+                    lifelineResult.includes("D") ? "" : "opacity-20"
+                  } px-8 py-4 w-full min-w-fit text-xl text-left text-white`}
                   onClick={() => handleSelectAnswer("D")}
                   disabled={lost || showCorrectAnswer || !!selectedAnswer}
                 >
